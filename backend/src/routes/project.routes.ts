@@ -1,28 +1,14 @@
 import { Router } from "express";
-import { prisma } from "../db";
+import { getProjectSummary, getProjectTasks } from "../services/project.service";
 
 export const projectsRouter = Router();
 
 projectsRouter.get("/:id", async (req, res) => {
     try {
         const id = req.params.id;
+        const project = await getProjectSummary(id);
 
-        const project = await prisma.project.findUnique({
-            where: { id },
-            select: {
-                id: true,
-                name: true,
-                description: true,
-                createdAt: true,
-                updatedAt: true,
-                _count: { select: { tasks: true }}
-            }
-        });
-
-        if (!project) {
-            return res.status(404).json({ message: "Project not found" });
-        }
-
+        if (!project) return res.status(404).json({ message: "Project not found"});
         return res.json(project);
     } catch {
         return res.status(500).json({ message: "Internal server error"});
@@ -39,24 +25,12 @@ projectsRouter.get("/:id/tasks", async (req, res) => {
         const take = Number.isFinite(takeRaw) ? Math.min(Math.max(takeRaw, 1), 200) : 50;
         const skip = Number.isFinite(skipRaw) ? Math.max(skipRaw, 0) : 0;
 
-        const exists = await prisma.project.findUnique({
-            where: { id },
-            select: { id: true }
-        });
+        const exist = await getProjectSummary(id);
+        if (!exist) return res.status(404).json({ message: "Project not found"});
 
-        if (!exists) {
-            return res.status(404).json({ message: "Project not found" });
-        }
-
-        const tasks = await prisma.task.findMany({
-            where: { projectId: id },
-            orderBy: { createdAt: "asc" },
-            skip,
-            take
-        })
-
-        return res.json({ projectId: id, skip, take, items: tasks });
+        const tasks = await getProjectTasks(id, skip, take);
+        return res.json({projectId: id, skip, take, items: tasks});
     } catch {
         return res.status(500).json({ message: "Internal server error"});
     }
-})
+});

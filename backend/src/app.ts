@@ -3,6 +3,7 @@ import cors from "cors";
 import { projectsRouter } from "./routes/project.routes";
 import { tasksRouter } from "./routes/tasks.routes";
 import { sampleRouter } from "./routes/sample.routes";
+import { yoga } from "./graphql/yoga";
 
 const app = express();
 
@@ -16,6 +17,8 @@ app.get("/health", (req: Request, res: Response) => {
 app.use("/api/v0/projects", projectsRouter);
 app.use("/api/v0/tasks", tasksRouter);
 app.use("/api/v0/sample", sampleRouter);
+
+app.use(yoga.graphqlEndpoint, yoga as any);
 
 export { app };
 

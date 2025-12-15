@@ -12,6 +12,12 @@ function count(data, metric) {
   return values.count ?? null;
 }
 
+function runId() {
+  const r = (__ENV.RUN_ID || "").trim();
+  if (r) return r;
+  return new Date().toISOString().replace(/[:.]/g, "-");
+}
+
 function fmt(n) {
   if (n === null || n === undefined) return "n/a";
   if (typeof n !== "number") return String(n);
@@ -20,8 +26,11 @@ function fmt(n) {
 }
 
 export function buildOutputs(name, data) {
+  const rid = runId();
   const out = {
     name,
+    runId: rid,
+    timestamp: new Date().toISOString(),
     vus: data.options && data.options.vus ? data.options.vus : null,
     duration_ms: data.state && data.state.testRunDurationMs ? data.state.testRunDurationMs : null,
     http_req_failed_rate: v(data, "http_req_failed", "rate"),
@@ -40,6 +49,7 @@ export function buildOutputs(name, data) {
 
   const txt =
     `test: ${name}\n` +
+    `runId: ${rid}\n` +
     `http_req_failed: ${fmt(out.http_req_failed_rate)}\n` +
     `http_req_duration avg(ms): ${fmt(out.http_req_duration_avg_ms)}\n` +
     `http_req_duration p95(ms): ${fmt(out.http_req_duration_p95_ms)}\n` +
@@ -53,7 +63,7 @@ export function buildOutputs(name, data) {
 
   return {
     stdout: txt,
-    [`k6/results/${name}.summary.json`]: JSON.stringify(out, null, 2),
-    [`k6/results/${name}.summary.txt`]: txt
+    [`k6/results/${name}.${rid}.summary.json`]: JSON.stringify(out, null, 2),
+    [`k6/results/${name}.${rid}.summary.txt`]: txt
   };
 }

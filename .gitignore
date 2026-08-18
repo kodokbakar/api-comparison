@@ -38,3 +38,6 @@ docker-compose.override.yml
 # Temporary files
 *.tmp
 .cache/
+DATABASE_UPDATE_SUMMARY.md
+v4_jurnal.md
+v4_sinta1_gap_analysis.md

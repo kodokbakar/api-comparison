@@ -5,12 +5,12 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: api_comparison
+      POSTGRES_DB: new_api_comparison
     ports:
       - "5432:5432"
     volumes:
       - db-data:/var/lib/postgresql/data
-  
+
   pgadmin:
     image: dpage/pgadmin4
     container_name: api_comparison-pgadmin

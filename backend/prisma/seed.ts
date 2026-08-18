@@ -2,6 +2,7 @@ import "dotenv/config";
 import { PrismaClient, TaskStatus } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import pg from "pg";
+import { exec } from "child_process";
 
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
@@ -47,8 +48,9 @@ function buildCounts(projectCount: number, totalTasks: number) {
 }
 
 async function main() {
-    const projectCount = 40;
-    const totalTasks = 2000;
+    // NEW: Larger dataset for SINTA 1 research
+    const projectCount = 10000;
+    const totalTasks = 50000;
 
     await prisma.task.deleteMany();
     await prisma.project.deleteMany();
@@ -105,6 +107,29 @@ async function main() {
     const taskTotal = await prisma.task.count();
 
     console.log(JSON.stringify({ projectTotal, taskTotal }, null, 2));
+
+    // Send local notification using notify-send (Linux)
+    exec(`notify-send "📊 Database Updated" "✅ Projects: ${projectTotal}\n✅ Tasks: ${taskTotal}\n\nReady for SINTA 1 research!"`, (err) => {
+        if (err) {
+            console.warn("⚠️ Could not send system notification:", err.message);
+        } else {
+            console.log("✅ System notification sent.");
+        }
+    });
+
+    // WhatsApp notification (if WhatsApp CLI is available in future)
+    // Uncomment below and replace with actual phone number when WhatsApp CLI is set up:
+    /*
+    const message = `📊 Database Updated Successfully!\n\n✅ Projects: ${projectTotal}\n✅ Tasks: ${taskTotal}\n\n🎯 Ready for SINTA 1 research load testing.`;
+    
+    exec(`whatsapp-cli send "+YOUR_PHONE_NUMBER" "${message.replace(/\n/g, "\\n")}"`, (err) => {
+        if (err) {
+            console.warn("⚠️ Could not send WhatsApp notification:", err.message);
+        } else {
+            console.log("✅ WhatsApp notification sent to home.");
+        }
+    });
+    */
 }
 
 main()
